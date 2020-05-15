@@ -2,6 +2,7 @@ import torch
 from random import shuffle
 from collections import Counter
 import argparse
+import torch.nn as nn # use plan embeding 
 
 
 def getRandomContext(corpus, C=5):
