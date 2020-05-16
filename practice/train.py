@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from optimizer import SGD
 import data.spiral as spiral
 import matplotlib.pyplot as plt
@@ -13,6 +14,7 @@ learning_rate = 1.0
 
 # 데이터 읽기, 모델과 옵티마이저 생성
 x, t = spiral.load_data()
+x, t = torch.from_numpy(x).float(), torch.from_numpy(t).float()
 model = TwoLayerNet(input_size=2, hidden_size=hidden_size, output_size=3)
 optimizer = SGD(lr=learning_rate)
 
@@ -25,7 +27,7 @@ loss_list = []
 
 for epoch in range(max_epoch):
     # 데이터 뒤섞기
-    idx = np.random.permutation(data_size)
+    idx = torch.randperm(data_size)
     x = x[idx]
     t = t[idx]
 
@@ -51,7 +53,7 @@ for epoch in range(max_epoch):
 
 
 # 학습 결과 플롯
-plt.plot(np.arange(len(loss_list)), loss_list, label='train')
+plt.plot(torch.arange(len(loss_list)), loss_list, label='train')
 plt.xlabel('반복 (x10)')
 plt.ylabel('손실')
 plt.show()
@@ -62,6 +64,7 @@ x_min, x_max = x[:, 0].min() - .1, x[:, 0].max() + .1
 y_min, y_max = x[:, 1].min() - .1, x[:, 1].max() + .1
 xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
 X = np.c_[xx.ravel(), yy.ravel()]
+X = torch.from_numpy(X).float()
 score = model.predict(X)
 predict_cls = np.argmax(score, axis=1)
 Z = predict_cls.reshape(xx.shape)

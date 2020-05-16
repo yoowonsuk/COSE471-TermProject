@@ -36,6 +36,17 @@ class Layer(Model):
     def backward(self, dout):
         pass
 
+class LossLayer(Layer):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, x):
+        pass
+
+    @abstractmethod
+    def forward(self, x, t):
+        pass
+
 class Net(Model):
     def __init__(self):
         super().__init__()
