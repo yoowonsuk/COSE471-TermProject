@@ -1,4 +1,4 @@
-from model import Optimizer
+from common.model import Optimizer
 class SGD(Optimizer):
     def __init__(self, lr=1e-04):
         super().__init__(lr)

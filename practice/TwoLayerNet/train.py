@@ -1,9 +1,11 @@
+import sys
+sys.path.append('..')  # 부모 디렉터리의 파일을 가져올 수 있도록 설정
 import numpy as np
 import torch
-from optimizer import SGD
 import data.spiral as spiral
 import matplotlib.pyplot as plt
-from net import TwoLayerNet
+from common.optimizer import SGD
+from TwoLayerNet import TwoLayerNet
 
 
 # 하이퍼파라미터 설정

@@ -1,5 +1,5 @@
-from model import Layer, LossLayer
-from function import softmax, cross_entropy_error
+from common.model import Layer, LossLayer
+from common.function import softmax, cross_entropy_error
 import torch
 
 class Sigmoid(Layer):
@@ -17,10 +17,13 @@ class Sigmoid(Layer):
 
 
 class Affine(Layer):
-    def __init__(self, input_size, output_size):
+    def __init__(self, input_size, output_size, shared=None):
         super().__init__()
-        W = 0.01 * torch.randn(input_size, output_size)
-        b = torch.zeros(output_size)
+        if shared is None:
+            W = 0.01 * torch.randn(input_size, output_size)
+            b = torch.zeros(output_size)
+        else:
+            W, b = shared
         self.add_params([W, b])
         self.add_grads([torch.zeros_like(W), torch.zeros_like(b)])
 
@@ -35,10 +38,32 @@ class Affine(Layer):
         dx = torch.mm(dout, W.T)
         dW = torch.mm(self.x.T, dout)
         db = torch.sum(dout, axis=0)
-
         self.set_grads(0, dW)
         self.set_grads(1, db)
         return dx
+
+class ParellelAffine(Layer):
+    def __init__(self, input_size, output_size, num):
+        super().__init__()
+        W = 0.01 * torch.randn(input_size, output_size)
+        b = torch.zeros(output_size)
+        self.add_params([W, b])
+        self.add_grads([torch.zeros_like(W), torch.zeros_like(b)])
+        self.num = num
+        self.affines = []
+        for i in range(num):
+            self.affines.append(Affine(input_size, output_size, (W, b)))
+
+    def forward(self, x):
+        out = 0
+        for i, affine in enumerate(self.affines):
+            out += affine.forward(x[:, i, :])
+        return out / self.num
+
+    def backward(self, dout):
+        for affine in self.affines:
+            affine.backward(dout / self.num)
+        return None
 
 class SoftmaxWithLoss(LossLayer):
     def __init__(self):
