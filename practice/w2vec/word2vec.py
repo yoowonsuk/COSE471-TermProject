@@ -8,6 +8,7 @@ sys.path.append('..')
 from common.optimizer import SGD
 from common.util import preprocess, create_context_target, convert_one_hot
 from w2vec.CBow import CustomCBOW
+import pickle # for save
 
 def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=0.05, iteration=50000, batch_size=500):
     window_size = 3
@@ -73,7 +74,21 @@ def main():
 	# Full training takes very long time. We recommend using a subset of text8 when you debug
     corpus, word2ind, _ = preprocess(text, subset=1e-6)
     print("processing completed")
-    word2vec_trainer(corpus, word2ind, mode="CBOW", learning_rate=0.01, iteration=50000)
+    W_emb, W_out = word2vec_trainer(corpus, word2ind, mode="CBOW", learning_rate=0.01, iteration=50000)
     
+    # plot (not sure, skipgram 보고 나중에 수정할게요)
+    trainer.plot()
 
+    # saved
+    params = {}
+    params['word_vecs'] = W_emb.astype(np.float16)
+    params['word_out'] = W_out.astype(np.float16)
+    if mode == 'CBOW':
+        pkl_file = 'cbow_params.pkl'
+    elif mode == 'SG':
+        pkl_file = 'skipgram_params.pkl'
+
+    with open(pkl_file, 'wb') as f:
+        pickle.dump(params, f, -1)
+    
 main()
