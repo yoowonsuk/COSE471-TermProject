@@ -44,7 +44,7 @@ class Affine(Layer):
         self.set_grads(1, db)
         return dx
 
-class ParellelAffine(Layer):
+class ParellelInputAffine(Layer):
     def __init__(self, input_size, output_size, num):
         super().__init__()
         W = 0.01 * torch.randn(input_size, output_size)
@@ -90,6 +90,7 @@ class Mean(Layer):
     def backward(self, dout):
         return dout / self.num
 
+
 class SoftmaxWithLoss(LossLayer):
     def __init__(self):
         self.params, self.grads = [], []
@@ -106,7 +107,6 @@ class SoftmaxWithLoss(LossLayer):
 
     def backward(self, dout=1):
         batch_size = self.t.shape[0]
-
         dx = self.y
         dx[torch.arange(batch_size), self.t] -= 1
         dx *= dout

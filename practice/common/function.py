@@ -17,6 +17,5 @@ def cross_entropy_error(y, t):
         y = y.reshape(1, y.size)
     if t.size() == y.size():
         t = t.argmax(axis=1)
-    
     batch_size = y.shape[0]
     return -torch.sum(torch.log(y[torch.arange(batch_size), t] + 1e-7)) / batch_size

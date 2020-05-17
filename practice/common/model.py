@@ -51,7 +51,7 @@ class Net(Model):
     def __init__(self):
         super().__init__()
         self.layers = []
-        self.loss_layer = None
+        self.loss_layers = []
     
     def predict(self, x):
         for layer in self.layers:
@@ -60,20 +60,27 @@ class Net(Model):
 
     def forward(self, x, t):
         score = self.predict(x)
-        loss = self.loss_layer.forward(score, t)
+        loss = 0
+        for loss_layer in self.loss_layers:
+            loss += loss_layer.forward(score, t)
         return loss
 
     def backward(self, dout=1):
-        dout = self.loss_layer.backward(dout)
+        d = 0
+        for loss_layer in self.loss_layers:
+            d += loss_layer.backward(dout)
         for layer in reversed(self.layers):
-            dout = layer.backward(dout)
-        return dout
+            d = layer.backward(d)
+        return d
     
     def add_layers(self, layers): # List
         self.layers += layers
         for layer in layers:
             self.add_params(layer.get_params())
             self.add_grads(layer.get_grads())
+    
+    def add_lossLayer(self, lossLayer):
+        self.loss_layers += lossLayer
 
 class Optimizer(ABC):
     def __init__(self, lr):
