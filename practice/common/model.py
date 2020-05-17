@@ -82,3 +82,6 @@ class Optimizer(ABC):
     @abstractmethod
     def update(self):
         pass
+
+    def set_lr(self, lr):
+        self.lr = lr

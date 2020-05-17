@@ -69,7 +69,6 @@ def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=
     W_out = torch.randn(len(word2ind), dimension) / (dimension**0.5)
     window_size = 5
 
-    
     losses=[]
     for i in range(iteration):
         #Training word2vec using SGD

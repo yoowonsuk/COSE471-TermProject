@@ -8,13 +8,15 @@ import torch
 from w2vec.CBow import CustomCBOW
 from data import ptb
 
-window_size = 1
+window_size = 5
 hidden_size = 5
 batch_size = 3
-max_epoch = 10000
+max_epoch = 5000
 
-text = 'you say goodbye and i say hello'
-corpus, word_to_id, id_to_word = preprocess(text)
+with open('text8', 'r') as f:
+    text = f.read()
+corpus, word_to_id, id_to_word = preprocess(text, subset=1e-4)
+print("complete")
 vocab_size = len(word_to_id)
 contexts, target = create_context_target(corpus, window_size)
 target = convert_one_hot(target, vocab_size)

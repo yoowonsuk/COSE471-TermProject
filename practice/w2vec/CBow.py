@@ -13,3 +13,11 @@ class CustomCBOW(Net):
         ])
         self.loss_layer = SoftmaxWithLoss()
         self.word_vecs = self.get_params()[0]
+    
+    def get_inputw(self):
+        params = self.get_params()
+        return params[0], params[1]
+
+    def get_outputw(self):
+        params = self.get_params()
+        return params[2], params[3]

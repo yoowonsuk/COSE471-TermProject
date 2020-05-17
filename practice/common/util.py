@@ -1,7 +1,7 @@
 import re
 import torch
 import matplotlib.pyplot as plt
-def corpus2List(corpus_raw):
+def corpus2dict(corpus_raw):
     word_to_id = {}
     id_to_word = {}
     for word in corpus_raw:
@@ -14,9 +14,10 @@ def corpus2List(corpus_raw):
 def corpus2Id(corpus_raw, w2i):
     return torch.tensor([w2i[w] for w in corpus_raw], dtype=torch.int32)
 
-def preprocess(corpus_raw):
+def preprocess(corpus_raw, subset=1.0):
     corpus_raw = re.sub("[^\w]", " ",  corpus_raw.lower()).split()
-    word_to_id, id_to_word = corpus2List(corpus_raw)
+    corpus_raw = corpus_raw[0:int(len(corpus_raw)*subset)]
+    word_to_id, id_to_word = corpus2dict(corpus_raw)
     corpus_id = corpus2Id(corpus_raw, word_to_id)
     return corpus_id, word_to_id, id_to_word
 
@@ -101,3 +102,14 @@ def create_context_target(corpus, window_size=1):
         context = torch.cat((context, sub))
     context = context.reshape((-1, window_size*2))
     return context[1:], target
+
+def clip_grads(grads, max_norm):
+    total_norm = 0
+    for grad in grads:
+        total_norm += np.sum(grad ** 2)
+    total_norm = np.sqrt(total_norm)
+
+    rate = max_norm / (total_norm + 1e-6)
+    if rate < 1:
+        for grad in grads:
+            grad *= rate

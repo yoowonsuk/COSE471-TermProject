@@ -1,14 +1,13 @@
 import torch
 def softmax(x):
     if x.ndim == 2:
-        _, m = x.max(axis=1, keepdims=True)
+        m, _ = x.max(axis=1, keepdims=True)
         x = x - m
         x = torch.exp(x)
         x /= x.sum(axis=1, keepdims=True)
     elif x.ndim == 1:
         x = x - torch.max(x)
         x = torch.exp(x) / torch.sum(torch.exp(x))
-
     return x
 
 

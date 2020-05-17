@@ -24,8 +24,10 @@ class Affine(Layer):
             b = torch.zeros(output_size)
         else:
             W, b = shared
+        dW = torch.zeros_like(W)
+        db = torch.zeros_like(b)
         self.add_params([W, b])
-        self.add_grads([torch.zeros_like(W), torch.zeros_like(b)])
+        self.add_grads([dW, db])
 
     def forward(self, x):
         W, b = self.get_params()
@@ -47,13 +49,15 @@ class ParellelAffine(Layer):
         super().__init__()
         W = 0.01 * torch.randn(input_size, output_size)
         b = torch.zeros(output_size)
+        dW = torch.zeros_like(W)
+        db = torch.zeros_like(b)
         self.add_params([W, b])
-        self.add_grads([torch.zeros_like(W), torch.zeros_like(b)])
+        self.add_grads([dW, db])
         self.num = num
         self.affines = []
         for i in range(num):
-            self.affines.append(Affine(input_size, output_size, (W, b)))
-
+            self.affines += [Affine(input_size, output_size, (W, b))]
+        
     def forward(self, x):
         out = 0
         for i, affine in enumerate(self.affines):
@@ -63,6 +67,10 @@ class ParellelAffine(Layer):
     def backward(self, dout):
         for affine in self.affines:
             affine.backward(dout / self.num)
+            dW, db = self.get_grads()
+            indiv_dW, indiv_db = affine.get_grads()
+            dW += indiv_dW
+            db += indiv_db
         return None
 
 class SoftmaxWithLoss(LossLayer):
@@ -74,10 +82,8 @@ class SoftmaxWithLoss(LossLayer):
     def forward(self, x, t):
         self.t = t
         self.y = softmax(x)
-
         if self.t.size() == self.y.size():
             self.t = self.t.argmax(axis=1)
-
         loss = cross_entropy_error(self.y, self.t)
         return loss
 

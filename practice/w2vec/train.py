@@ -8,7 +8,7 @@ import torch
 from w2vec.CBow import CustomCBOW
 from data import ptb
 
-window_size = 1
+window_size = 2
 hidden_size = 5
 batch_size = 3
 max_epoch = 1000
