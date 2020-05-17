@@ -6,7 +6,6 @@ class CustomCBOW(Net):
     def __init__(self, input_size, hidden_size, output_size, num):
         super().__init__()
         I, H, O = input_size, hidden_size, output_size
-
         # 계층 생성
         self.add_layers([
             ParellelAffine(I, H, num),

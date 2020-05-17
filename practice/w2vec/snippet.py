@@ -11,7 +11,7 @@ from data import ptb
 window_size = 1
 hidden_size = 5
 batch_size = 3
-max_epoch = 1000
+max_epoch = 10000
 
 text = 'you say goodbye and i say hello'
 corpus, word_to_id, id_to_word = preprocess(text)
