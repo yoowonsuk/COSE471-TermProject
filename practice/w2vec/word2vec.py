@@ -10,7 +10,7 @@ from common.util import preprocess, create_context_target, convert_one_hot
 from w2vec.CBow import CustomCBOW
 
 def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=0.05, iteration=50000, batch_size=500):
-    window_size = 1
+    window_size = 3
     vocab_size = len(word2ind)
     contexts, target = create_context_target(corpus, window_size)
     target = convert_one_hot(target, vocab_size)
@@ -33,7 +33,7 @@ def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=
     for i in range(iteration):
         
         ################## getRandomContext ##################
-        index = torch.randint(len(target), (batch_size,))
+        index = torch.randperm(len(target))[0:batch_size]
         centerWord, contextWords = target[index], contexts[index]
         ######################################################    
 
@@ -71,7 +71,7 @@ def main():
         text = f.read()
 	# Write your code of data processing, training, and evaluation
 	# Full training takes very long time. We recommend using a subset of text8 when you debug
-    corpus, word2ind, _ = preprocess(text, subset=1e-3)
+    corpus, word2ind, _ = preprocess(text, subset=1e-4)
     print("processing completed")
     word2vec_trainer(corpus, word2ind, mode="CBOW", learning_rate=0.01, iteration=50000)
     

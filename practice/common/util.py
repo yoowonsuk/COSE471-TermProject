@@ -96,7 +96,7 @@ def convert_one_hot(corpus, vocab_size):
 def create_context_target(corpus, window_size=1):
     target = corpus[window_size:-window_size]
     context = torch.zeros(2 * window_size).int()
-    for i in range(window_size, len(corpus)-2*window_size+1):
+    for i in range(window_size, len(corpus)-window_size):
         sub = corpus[i-window_size:i+window_size+1].clone()
         sub = torch.cat([sub[0:window_size], sub[window_size+1:sub.shape[0]]])
         context = torch.cat((context, sub))
