@@ -75,7 +75,7 @@ most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
 
 emb_test = w_emb[word2id["apparently"]] - w_emb[word2id["apparent"]] + w_emb[word2id["rapid"]]
 most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
-emb_test = w_emb[word2id["apparently"]] - w_emb[word2id["apparent"]] + w_emb[word2id["rapid"]]
+emb_test = w_emb[word2id["apparently"]] - w_emb[word2id["apparent"]] + w_emb[word2id["rapidly"]]
 most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
 emb_test = w_emb[word2id["rapidly"]] - w_emb[word2id["rapid"]] + w_emb[word2id["apparent"]]
 most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
