@@ -2,7 +2,6 @@ import torch
 import random
 from collections import Counter
 import argparse
-import torch.nn as nn # use plan embeding 
 import sys
 sys.path.append('..')
 from common.optimizer import SGD
@@ -63,7 +62,7 @@ def main():
     W_emb, W_out = word2vec_trainer(corpus, word2id, mode="CBOW", learning_rate=0.01, iteration=50000, window_size=1)
     
 
-    # plot (not sure, skipgram 보고 나중에 수정할게요)
+    # plot
     # trainer.plot()
 
     # saved
@@ -75,6 +74,5 @@ def main():
 
     with open('pkl_file', 'wb') as f:
         pickle.dump(params, f, -1)
-    close(f)
     
 main()

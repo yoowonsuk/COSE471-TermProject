@@ -1,12 +1,16 @@
 from common.util import most_similar_byEmb
+import pickle
 with open('text8', 'r') as f:
     text = f.read()
 # Write your code of data processing, training, and evaluation
 # Full training takes very long time. We recommend using a subset of text8 when you debug
 #_, word2id, id2word = preprocess(text, subset=1e-4)
-with open('cbow_params.pkl', 'rb') as f:
-    w_emb, w_out, word2id, id2word = pickle.load(f)
-close(f)
+with open('pkl_file', 'rb') as f:
+    params = pickle.load(f)
+
+w_emb = params['word_vecs']
+id2word = params['id2word']
+word2id = params['word2id']
 
 
 ################## similarity test ##################
