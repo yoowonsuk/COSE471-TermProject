@@ -5,7 +5,8 @@ with open('text8', 'r') as f:
 # Write your code of data processing, training, and evaluation
 # Full training takes very long time. We recommend using a subset of text8 when you debug
 #_, word2id, id2word = preprocess(text, subset=1e-4)
-with open('pkl_file', 'rb') as f:
+# with open ("skippkl_file', 'rb') as f:
+with open('cbowpkl_file', 'rb') as f:
     params = pickle.load(f)
 
 w_emb = params['word_vecs']
