@@ -12,9 +12,8 @@ w_emb = params['word_vecs']
 id2word = params['id2word']
 word2id = params['word2id']
 
-
 ################## similarity test ##################
-emb_test = w_emb[word2id["works"]] - w_emb[word2id["work"]] + w_emb[word2id["speak"]]
+emb_test = w_emb[word2id['works']] - w_emb[word2id['work']] + w_emb[word2id['speak']]
 most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
 emb_test = w_emb[word2id["works"]] - w_emb[word2id["works"]] + w_emb[word2id["speaks"]]
 most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)

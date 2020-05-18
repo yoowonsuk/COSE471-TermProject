@@ -68,7 +68,7 @@ def main():
     # saved
     params = {}
     params['word_vecs'] = W_emb
-    params['word_out'] = W_out
+    #params['word_out'] = W_out
     params['word2id'] = word2id
     params['id2word'] = id2word
 
