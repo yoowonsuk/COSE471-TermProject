@@ -67,15 +67,18 @@ def main():
     # trainer.plot()
 
     # saved
-    # params = {}
-    # params['word_vecs'] = W_emb.astype(np.float16)
-    # params['word_out'] = W_out.astype(np.float16)
-    # if mode == 'CBOW':
-    #     pkl_file = 'cbow_params.pkl'
-    # elif mode == 'SG':
-    #     pkl_file = 'skipgram_params.pkl'
+    params = {}
+    params['word_vecs'] = W_emb
+    params['word_out'] = W_out
+    params['word2id'] = word2id
+    params['id2word'] = id2word
 
-    # with open(pkl_file, 'wb') as f:
-    #     pickle.dump(params, f, -1)
+    if mode == 'CBOW':
+        pkl_file = 'cbow_params.pkl'
+    elif mode == 'SG':
+        pkl_file = 'skipgram_params.pkl'
+
+    with open(pkl_file, 'wb') as f:
+        pickle.dump(params, f, -1)
     
 main()
