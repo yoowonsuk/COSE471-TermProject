@@ -75,5 +75,6 @@ def main():
 
     with open('pkl_file', 'wb') as f:
         pickle.dump(params, f, -1)
+    close(f)
     
 main()
