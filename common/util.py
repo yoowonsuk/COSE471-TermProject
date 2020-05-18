@@ -41,7 +41,15 @@ def cos_similarity(x, y):
     norm_y = y / torch.sqrt(torch.sum(y**2) + eps)
     return torch.dot(norm_x, norm_y)
 
-def most_similar(word, word_to_id, id_to_word, word_matrix, top=5):
+def most_similar_byEmb(word, word_to_id, id_to_word, word_matrix, top=5):
+    size = len(word_to_id)
+    similarity = torch.zeros(size)
+    for i in range(size):
+        similarity[i] = cos_similarity(word, word_matrix[i])
+    for i in similarity.argsort(descending=True):
+        print("%s : %.4f" % (id_to_word[i.item()], similarity[i]))
+
+def most_similar_byWord(word, word_to_id, id_to_word, word_matrix, top=5):
     assert(word in word_to_id)
     size = len(word_to_id)
     similarity = torch.zeros(size)
@@ -51,33 +59,7 @@ def most_similar(word, word_to_id, id_to_word, word_matrix, top=5):
         similarity[i] = cos_similarity(word_matrix[word_to_id[word]], word_matrix[i])
     for i in similarity.argsort(descending=True):
         print("%s : %.4f" % (id_to_word[i.item()], similarity[i]))
-
-def ppmi(matrix, eps=1e-08, svd=False, wordvec_size=2):
-    ppmi_m = torch.zeros_like(matrix)
-    N = torch.sum(matrix)
-    A = torch.sum(matrix, axis=0)
-    vocab_size = matrix.shape[0]
-    for i in range(vocab_size):
-        for j in range(vocab_size):
-            ppmi_m[i][j] = max(0, torch.log2(matrix[i][j] * N / (A[i] * A[j]) + eps))
-    if svd is True:
-        try:
-            from sklearn.decomposition import TruncatedSVD
-            svd = TruncatedSVD(n_components=wordvec_size, n_iter=5)
-            svd.fit(ppmi_m)
-            new = torch.from_numpy(svd.transform(ppmi_m))
-        except ImportError:
-            new, _, _ = torch.svd(ppmi_m)
-        return new[:, :wordvec_size]
-    else:
-        return ppmi_m
     
-def similarity_plt(word_to_id, matrix):
-    for word, word_id in word_to_id.items():
-        plt.annotate(word, (matrix[word_id, 0], matrix[word_id, 1]))
-    plt.scatter(matrix[:, 0], matrix[:, 1], alpha=0.5)
-    plt.show()
-
 def convert_one_hot(corpus, vocab_size):
     N = corpus.shape[0]
     if corpus.ndim == 1:

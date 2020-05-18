@@ -10,6 +10,7 @@ from common.util import preprocess, create_context_target, convert_one_hot
 from w2vec.CBow import CustomCBOW
 from w2vec.SkipGram import CustomSkipGram
 import pickle # for save
+from common.util import most_similar_byEmb
 
 def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=0.01, iteration=50000, batch_size=500, window_size=3):
     vocab_size = len(word2ind)
@@ -57,10 +58,11 @@ def main():
         text = f.read()
 	# Write your code of data processing, training, and evaluation
 	# Full training takes very long time. We recommend using a subset of text8 when you debug
-    corpus, word2ind, _ = preprocess(text, subset=1e-4)
+    corpus, word2id, id2word = preprocess(text, subset=1e-4)
     print("processing completed")
-    W_emb, W_out = word2vec_trainer(corpus, word2ind, mode="SG", learning_rate=0.01, iteration=50000, window_size=1)
+    W_emb, W_out = word2vec_trainer(corpus, word2id, mode="SG", learning_rate=0.01, iteration=50000, window_size=1)
     
+
     # plot (not sure, skipgram 보고 나중에 수정할게요)
     # trainer.plot()
 
