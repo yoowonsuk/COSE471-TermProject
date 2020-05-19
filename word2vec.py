@@ -16,7 +16,7 @@ def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=
     losses = []
     sum_iter = 0
     parallel_num = 2 * window_size # number of parallel affine layers
-    slice_len = 10000
+    slice_len = 1000
     #################### model initialization ####################
     if mode == "CBOW":
         model = CustomCBOW(vocab_size, dimension, vocab_size, parallel_num)
@@ -26,24 +26,20 @@ def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=
         print("Unkwnown mode : " + mode)
         exit()
     optimizer = SGD(lr=learning_rate)
-    ######## corpus slicing (to avoid memory excess error) ########
-    corpus_sliced = []
+    #############################################################
     head = 0
     tail = 0
+    slice_index = 1
     while tail < len(corpus):
         tail = min(tail + slice_len, len(corpus))
-        corpus_sliced.append(corpus[max(0, head - 2 * window_size) : tail])
-        head = tail
-    print("Length of one slice : %d / Number of slices : %d" % (slice_len, len(corpus_sliced)))
-    ######################## Learning ########################
-    for i, sub_corpus in enumerate(corpus_sliced):
-        print("Learning for corpus slice #%d" % (i+1))
+        ################################ Learning ################################
+        sub_corpus = corpus[max(0, head - 2 * window_size) : tail]
         contexts, target = create_context_target(sub_corpus, window_size)
         target = convert_one_hot(target, vocab_size).float()
         contexts = convert_one_hot(contexts, vocab_size).float()
         batch_size = min(batch_size, len(target))
+        print("Learning for corpus slice #%d" % (slice_index))
         for i in range(iteration+1):
-            sum_iter += 1
             ################## getRandomContext ##################
             index = torch.randperm(len(target))[0:batch_size]
             centerWord, contextWords = target[index], contexts[index]
@@ -56,9 +52,12 @@ def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=
             lr = learning_rate*(1-i/iteration)
             optimizer.set_lr(lr)
             #########################################################
-            if sum_iter%1000==0:
+            if i%1000==0:
                 avg_loss=sum(losses)/len(losses)
-                print("Iteration : %d / Loss : %f" %(sum_iter, avg_loss))
+                print("Iteration : %d / Loss : %f" %(i, avg_loss))
+        ##########################################################################
+        head = tail
+        slice_index += 1
     ######### Extract W matrix #########
     W_in, b_in = model.get_inputw()
     W_out, b_out = model.get_outputw()
@@ -74,7 +73,7 @@ def main():
 	# Full training takes very long time. We recommend using a subset of text8 when you debug
     corpus, word2id, id2word = preprocess(text, subset=1e-2)
     print("Processing completed")
-    W_emb, W_out = word2vec_trainer(corpus, word2id, mode=mode, learning_rate=0.01, iteration=5000, window_size=3)
+    W_emb, W_out = word2vec_trainer(corpus, word2id, mode=mode, learning_rate=0.05, iteration=5000, window_size=3)
 
     # saved
     params = {}
