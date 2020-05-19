@@ -41,12 +41,17 @@ def cos_similarity(x, y):
     norm_y = y / torch.sqrt(torch.sum(y**2) + eps)
     return torch.dot(norm_x, norm_y)
 
+def infer_word(w1, w2, w3, word_to_id, id_to_word, word_matrix): # w1 - w2 + w3 = ??
+    print("#### %s - %s + %s = ??? ####" % (w1, w2, w3))
+    emb_test = word_matrix[word_to_id['any']] - word_matrix[word_to_id['act']] + word_matrix[word_to_id['that']]
+    most_similar_byEmb(emb_test, word_to_id, id_to_word, word_matrix)
+
 def most_similar_byEmb(word, word_to_id, id_to_word, word_matrix, top=5):
     size = len(word_to_id)
     similarity = torch.zeros(size)
     for i in range(size):
         similarity[i] = cos_similarity(word, word_matrix[i])
-    for i in similarity.argsort(descending=True):
+    for i in similarity.argsort(descending=True)[0:min(top, size)]:
         print("%s : %.4f" % (id_to_word[i.item()], similarity[i]))
 
 def most_similar_byWord(word, word_to_id, id_to_word, word_matrix, top=5):
@@ -57,7 +62,7 @@ def most_similar_byWord(word, word_to_id, id_to_word, word_matrix, top=5):
         if i == word_to_id[word]:
             continue
         similarity[i] = cos_similarity(word_matrix[word_to_id[word]], word_matrix[i])
-    for i in similarity.argsort(descending=True):
+    for i in similarity.argsort(descending=True)[0:min(top, size)]:
         print("%s : %.4f" % (id_to_word[i.item()], similarity[i]))
     
 def convert_one_hot(corpus, vocab_size):

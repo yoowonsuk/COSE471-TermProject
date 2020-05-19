@@ -30,7 +30,7 @@ def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=
         print("Unkwnown mode : "+mode)
         exit()
     ##############################################################
-    for i in range(iteration):
+    for i in range(iteration+1):
         ################## getRandomContext ##################
         index = torch.randperm(len(target))[0:batch_size]
         centerWord, contextWords = target[index], contexts[index]
@@ -38,8 +38,8 @@ def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=
         loss = model.forward(contextWords, centerWord)
         model.backward()
         optimizer.update(model)
-        W_emb = model.get_inputw()
-        W_out = model.get_outputw()
+        W_emb = model.get_inputw()[0] # exclude bias
+        W_out = model.get_outputw()[0] # exclude bias
         losses.append(loss)
         ################## learning rate decay ##################
         lr = learning_rate*(1-i/iteration)
@@ -47,32 +47,32 @@ def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=
         #########################################################
         if i%1000==0:
         	avg_loss=sum(losses)/len(losses)
-        	print("Loss : %f" %(avg_loss,))
+        	print("Iteration : %d / Loss : %f" %(i, avg_loss))
         	losses=[]
 
     return W_emb, W_out
 
 def main():
+    mode = "CBOW"
     with open('text8', 'r') as f:
         text = f.read()
 	# Write your code of data processing, training, and evaluation
 	# Full training takes very long time. We recommend using a subset of text8 when you debug
-    corpus, word2id, id2word = preprocess(text, subset=1e-3)
+    corpus, word2id, id2word = preprocess(text, subset=1e-5)
     print("processing completed")
-    W_emb, W_out = word2vec_trainer(corpus, word2id, mode="CBOW", learning_rate=0.01, iteration=50000, window_size=1)
-    
-
-    # plot
-    # trainer.plot()
+    W_emb, W_out = word2vec_trainer(corpus, word2id, mode=mode, learning_rate=0.01, iteration=5000, window_size=1)
 
     # saved
     params = {}
     params['word_vecs'] = W_emb
-    #params['word_out'] = W_out
+    params['word_out'] = W_out
     params['word2id'] = word2id
     params['id2word'] = id2word
-
-    with open('pkl_file', 'wb') as f:
-        pickle.dump(params, f, -1)
+    if mode == "CBOW":
+        filename = 'cbowpkl_file'
+    elif mode == "SG":
+        filename = 'sgpkl_file'
+    with open(filename, 'wb') as f:
+        pickle.dump(params, f, protocol=3)
     
 main()
