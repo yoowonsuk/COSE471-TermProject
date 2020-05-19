@@ -2,7 +2,6 @@ import torch
 import random
 from collections import Counter
 import argparse
-import torch.nn as nn # use plan embeding 
 import sys
 sys.path.append('..')
 from common.optimizer import SGD
@@ -60,22 +59,20 @@ def main():
 	# Full training takes very long time. We recommend using a subset of text8 when you debug
     corpus, word2id, id2word = preprocess(text, subset=1e-3)
     print("processing completed")
-    W_emb, W_out = word2vec_trainer(corpus, word2id, mode="SG", learning_rate=0.01, iteration=50000, window_size=1)
+    W_emb, W_out = word2vec_trainer(corpus, word2id, mode="CBOW", learning_rate=0.01, iteration=50000, window_size=1)
     
 
-    # plot (not sure, skipgram 보고 나중에 수정할게요)
+    # plot
     # trainer.plot()
 
     # saved
-    # params = {}
-    # params['word_vecs'] = W_emb.astype(np.float16)
-    # params['word_out'] = W_out.astype(np.float16)
-    # if mode == 'CBOW':
-    #     pkl_file = 'cbow_params.pkl'
-    # elif mode == 'SG':
-    #     pkl_file = 'skipgram_params.pkl'
+    params = {}
+    params['word_vecs'] = W_emb
+    #params['word_out'] = W_out
+    params['word2id'] = word2id
+    params['id2word'] = id2word
 
-    # with open(pkl_file, 'wb') as f:
-    #     pickle.dump(params, f, -1)
+    with open('pkl_file', 'wb') as f:
+        pickle.dump(params, f, -1)
     
 main()

@@ -1,16 +1,92 @@
 from common.util import most_similar_byEmb
+import pickle
 with open('text8', 'r') as f:
     text = f.read()
 # Write your code of data processing, training, and evaluation
 # Full training takes very long time. We recommend using a subset of text8 when you debug
 #_, word2id, id2word = preprocess(text, subset=1e-4)
-with open('cbow_params.pkl', 'rb') as f:
-    w_emb, w_out, word2id, id2word = pickle.load(f)
-close(f)
+# with open ("skippkl_file', 'rb') as f:
+with open('cbowpkl_file', 'rb') as f:
+    params = pickle.load(f)
 
+w_emb = params['word_vecs']
+id2word = params['id2word']
+word2id = params['word2id']
+
+# print(word2id) # check the Key
 
 ################## similarity test ##################
-most_similar_byEmb(word, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id['works']] - w_emb[0][word2id['work']] + w_emb[0][word2id['speak']]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[[0][word2id["works"]] - w_emb[0][word2id["works"]] + w_emb[0][word2id["speaks"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["speaks"]] - w_emb[0][word2id["speak"]] + w_emb[0][word2id["work"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["speak"]] - w_emb[0][word2id["speaks"]] + w_emb[0][word2id["works"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+
+emb_test = w_emb[0][word2id["mice"]] - w_emb[0][word2id["mouse"]] + w_emb[0][word2id["dollar"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["mice"]] - w_emb[0][word2id["mouse"]] + w_emb[0][word2id["dollars"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["speaks"]] - w_emb[0][word2id["speak"]] + w_emb[0][word2id["mouse"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["speaks"]] - w_emb[0][word2id["speak"]] + w_emb[0][word2id["mice"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+
+emb_test = w_emb[0][word2id["walked"]] - w_emb[0][word2id["walking"]] + w_emb[0][word2id["swimming"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["walked"]] - w_emb[0][word2id["walking"]] + w_emb[0][word2id["swam"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["swam"]] - w_emb[0][word2id["swimming"]] + w_emb[0][word2id["walking"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["swam"]] - w_emb[0][word2id["swimming"]] + w_emb[0][word2id["walked"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+
+emb_test = w_emb[0][word2id["thinking"]] - w_emb[0][word2id["think"]] + w_emb[0][word2id["read"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["thinking"]] - w_emb[0][word2id["think"]] + w_emb[0][word2id["reading"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["reading"]] - w_emb[0][word2id["read"]] + w_emb[0][word2id["think"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["reading"]] - w_emb[0][word2id["read"]] + w_emb[0][word2id["thinking"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+
+emb_test = w_emb[0][word2id["easiest"]] - w_emb[0][word2id["easy"]] + w_emb[0][word2id["lucky"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["easiest"]] - w_emb[0][word2id["easy"]] + w_emb[0][word2id["luckiest"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["luckiest"]] - w_emb[0][word2id["lucky"]] + w_emb[0][word2id["easy"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["luckiest"]] - w_emb[0][word2id["lucky"]] + w_emb[0][word2id["easiest"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+
+emb_test = w_emb[0][word2id["greater"]] - w_emb[0][word2id["great"]] + w_emb[0][word2id["tough"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["greater"]] - w_emb[0][word2id["great"]] + w_emb[0][word2id["tougher"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["tougher"]] - w_emb[0][word2id["tough"]] + w_emb[0][word2id["great"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["tougher"]] - w_emb[0][word2id["tough"]] + w_emb[0][word2id["greater"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+
+emb_test = w_emb[0][word2id["impossibly"]] - w_emb[0][word2id["possibly"]] + w_emb[0][word2id["ethical"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["impossibly"]] - w_emb[0][word2id["possibly"]] + w_emb[0][word2id["unethical"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["unethical"]] - w_emb[0][word2id["ethical"]] + w_emb[0][word2id["possibly"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["unethical"]] - w_emb[0][word2id["ethical"]] + w_emb[0][word2id["impossibly"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+
+emb_test = w_emb[0][word2id["apparently"]] - w_emb[0][word2id["apparent"]] + w_emb[0][word2id["rapid"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["apparently"]] - w_emb[0][word2id["apparent"]] + w_emb[0][word2id["rapidly"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["rapidly"]] - w_emb[0][word2id["rapid"]] + w_emb[0][word2id["apparent"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
+emb_test = w_emb[0][word2id["rapidly"]] - w_emb[0][word2id["rapid"]] + w_emb[0][word2id["apparently"]]
+most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
 # example #
 # emb_test = w_emb[word2id["works"]] - w_emb[word2id["works"]] + w_emb[word2id["speak"]]
 # most_similar_byEmb(emb_test, word2id, id2word, w_emb, top=5)
