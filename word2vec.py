@@ -58,9 +58,12 @@ def main():
         text = f.read()
 	# Write your code of data processing, training, and evaluation
 	# Full training takes very long time. We recommend using a subset of text8 when you debug
-    corpus, word2id, id2word = preprocess(text, subset=1e-3)
-    print("processing completed")
-    W_emb, W_out = word2vec_trainer(corpus, word2id, mode=mode, learning_rate=0.01, iteration=50000, window_size=1)
+    i = 1
+    while(i<=1000):
+        corpus, word2id, id2word = preprocess(text, i, subset=1e-3)
+        i += 1
+        print("processing completed")
+        W_emb, W_out = word2vec_trainer(corpus, word2id, mode=mode, learning_rate=0.01, iteration=50000, window_size=1)
 
     # saved
     params = {}

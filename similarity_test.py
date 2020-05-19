@@ -12,7 +12,7 @@ w_emb = params['word_vecs']
 id2word = params['id2word']
 word2id = params['word2id']
 
-infer_word('any', 'act', 'that', word2id, id2word, w_emb) # any - act + that = ???
+infer_word('work', 'works', 'speak', word2id, id2word, w_emb) # any - act + that = ???
 
 
 ################## similarity test ##################

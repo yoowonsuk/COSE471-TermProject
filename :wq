@@ -14,10 +14,9 @@ def corpus2dict(corpus_raw):
 def corpus2Id(corpus_raw, w2i):
     return torch.tensor([w2i[w] for w in corpus_raw], dtype=torch.int32)
 
-def preprocess(corpus_raw, i, subset=1.0):
+def preprocess(corpus_raw, subset=1.0):
     corpus_raw = re.sub("[^\w]", " ",  corpus_raw.lower()).split()
-    temp = i * (int(len(corpus_raw)*subset))
-    corpus_raw = corpus_raw[temp:temp+int(len(corpus_raw)*subset)]
+    corpus_raw = corpus_raw[0:int(len(corpus_raw)*subset)]
     word_to_id, id_to_word = corpus2dict(corpus_raw)
     corpus_id = corpus2Id(corpus_raw, word_to_id)
     return corpus_id, word_to_id, id_to_word
