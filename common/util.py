@@ -43,8 +43,12 @@ def cos_similarity(x, y):
 
 def infer_word(w1, w2, w3, word_to_id, id_to_word, word_matrix): # w1 - w2 + w3 = ??
     print("#### %s - %s + %s = ??? ####" % (w1, w2, w3))
-    emb_test = word_matrix[word_to_id[w1]] - word_matrix[word_to_id[w2]] + word_matrix[word_to_id[w3]]
-    most_similar_byEmb(emb_test, word_to_id, id_to_word, word_matrix)
+    try:
+        emb_test = word_matrix[word_to_id[w1]] - word_matrix[word_to_id[w2]] + word_matrix[word_to_id[w3]]
+        most_similar_byEmb(emb_test, word_to_id, id_to_word, word_matrix)
+    except KeyError as e:
+        print("Word is not embedded. Key :", e)
+        
 
 def most_similar_byEmb(word, word_to_id, id_to_word, word_matrix, top=5):
     size = len(word_to_id)

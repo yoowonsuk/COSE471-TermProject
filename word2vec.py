@@ -10,13 +10,14 @@ from w2vec.CBow import CustomCBOW
 from w2vec.SkipGram import CustomSkipGram
 import pickle # for save
 from common.util import most_similar_byEmb
+import math
 
-def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=0.01, iteration=50000, batch_size=500, window_size=3):
+def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=0.01, iteration=50000, batch_size=100, window_size=3):
     vocab_size = len(word2ind)
     losses = []
     sum_iter = 0
     parallel_num = 2 * window_size # number of parallel affine layers
-    slice_len = 1000
+    slice_len = 5000
     #################### model initialization ####################
     if mode == "CBOW":
         model = CustomCBOW(vocab_size, dimension, vocab_size, parallel_num)
@@ -38,7 +39,7 @@ def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=
         target = convert_one_hot(target, vocab_size).float()
         contexts = convert_one_hot(contexts, vocab_size).float()
         batch_size = min(batch_size, len(target))
-        print("Learning for corpus slice #%d" % (slice_index))
+        print("Learning for corpus slice #%d / #%d" % (slice_index, math.ceil(len(corpus) / slice_len)))
         for i in range(iteration+1):
             ################## getRandomContext ##################
             index = torch.randperm(len(target))[0:batch_size]
@@ -52,7 +53,7 @@ def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=
             lr = learning_rate*(1-i/iteration)
             optimizer.set_lr(lr)
             #########################################################
-            if i%1000==0:
+            if i%10==0 and i != 0:
                 avg_loss=sum(losses)/len(losses)
                 print("Iteration : %d / Loss : %f" %(i, avg_loss))
         ##########################################################################
@@ -71,9 +72,9 @@ def main():
         text = f.read()
 	# Write your code of data processing, training, and evaluation
 	# Full training takes very long time. We recommend using a subset of text8 when you debug
-    corpus, word2id, id2word = preprocess(text, subset=1e-2)
+    corpus, word2id, id2word = preprocess(text, subset=0.1)
     print("Processing completed")
-    W_emb, W_out = word2vec_trainer(corpus, word2id, mode=mode, learning_rate=0.05, iteration=5000, window_size=3)
+    W_emb, W_out = word2vec_trainer(corpus, word2id, mode=mode, learning_rate=0.05, iteration=100, window_size=2)
 
     # saved
     params = {}
