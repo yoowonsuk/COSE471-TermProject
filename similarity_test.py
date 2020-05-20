@@ -5,6 +5,7 @@ if mode == "CBOW":
     filename = 'cbowpkl_file'
 elif mode == "SG":
     filename = 'sgpkl_file'
+filename = 'cbowpkl_file2'
 with open(filename, 'rb') as f:
     params = pickle.load(f)
 

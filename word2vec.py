@@ -12,12 +12,11 @@ import pickle # for save
 from common.util import most_similar_byEmb
 import math
 
-def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=0.01, iteration=50000, batch_size=100, window_size=3):
+def word2vec_trainer(corpus, word2ind, id2word, mode="CBOW", dimension=64, learning_rate=0.01, iteration=50000, batch_size=100, window_size=3):
     vocab_size = len(word2ind)
     losses = []
-    sum_iter = 0
     parallel_num = 2 * window_size # number of parallel affine layers
-    slice_len = 5000
+    slice_len = 1000
     #################### model initialization ####################
     if mode == "CBOW":
         model = CustomCBOW(vocab_size, dimension, vocab_size, parallel_num)
@@ -53,12 +52,13 @@ def word2vec_trainer(corpus, word2ind, mode="CBOW", dimension=64, learning_rate=
             lr = learning_rate*(1-i/iteration)
             optimizer.set_lr(lr)
             #########################################################
-            if i%10==0 and i != 0:
+            if i%100==0 and i != 0:
                 avg_loss=sum(losses)/len(losses)
                 print("Iteration : %d / Loss : %f" %(i, avg_loss))
         ##########################################################################
         head = tail
         slice_index += 1
+ 
     ######### Extract W matrix #########
     W_in, b_in = model.get_inputw()
     W_out, b_out = model.get_outputw()
@@ -72,9 +72,9 @@ def main():
         text = f.read()
 	# Write your code of data processing, training, and evaluation
 	# Full training takes very long time. We recommend using a subset of text8 when you debug
-    corpus, word2id, id2word = preprocess(text, subset=0.1)
+    corpus, word2id, id2word = preprocess(text, subset=1.0)
     print("Processing completed")
-    W_emb, W_out = word2vec_trainer(corpus, word2id, mode=mode, learning_rate=0.05, iteration=100, window_size=2)
+    W_emb, W_out = word2vec_trainer(corpus, word2id, id2word, mode=mode, learning_rate=0.05, iteration=1000, window_size=2)
 
     # saved
     params = {}
