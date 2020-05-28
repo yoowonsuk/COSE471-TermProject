@@ -11,6 +11,7 @@ from w2vec.SkipGram import CustomSkipGram
 import pickle # for save
 from common.util import most_similar_byEmb
 import math
+import common.Negativesampling
 
 def word2vec_trainer(corpus, word2ind, id2word, mode="CBOW", dimension=64, learning_rate=0.01, iteration=50000, batch_size=100, window_size=3):
     vocab_size = len(word2ind)
