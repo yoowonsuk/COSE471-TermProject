@@ -52,7 +52,7 @@ class Net(Model):
         super().__init__()
         self.layers = []
         self.loss_layers = []
-    
+
     def predict(self, x):
         for layer in self.layers:
             x = layer.forward(x)
@@ -81,6 +81,7 @@ class Net(Model):
     
     def add_lossLayer(self, lossLayer):
         self.loss_layers += lossLayer
+
 
 class Optimizer(ABC):
     def __init__(self, lr):

@@ -53,7 +53,7 @@ class ParellelAffine(Layer):
         self.num = num
         self.affines = []
         for i in range(num):
-            self.affines += [Affine(input_size, output_size, (W, b))]
+            self.affines += [Affine(input_size, output_size, shared=(W, b))]
 
     def forward(self, x):
         out = None
@@ -97,5 +97,42 @@ class SoftmaxWithLoss(LossLayer):
         dx[torch.arange(batch_size), self.t] -= 1
         dx *= dout
         dx = dx / batch_size
-
         return dx
+
+class HSLogLoss(LossLayer):
+    def __init__(self, nodeCount):
+        self.params, self.grads = [], []
+        self.nodeCount = nodeCount
+        self.x = None
+        self.t = None
+        self.id2node = None
+
+    def forward(self, x, t):
+        self.x = x
+        self.t = t
+        loss = 0
+        batch_size = self.x.shape[0]
+        for i in range(batch_size):
+            row = self.x[i]
+            wordID = int((self.t[i] == 1).nonzero()) # convert one-hot to int
+            nodeset, codeset = self.id2node[wordID]
+            for i, code in enumerate(codeset):
+                if code == 0:
+                    loss += -torch.log(torch.sigmoid(row[nodeset[i]]) + 1e-6)
+                else:
+                    loss += -torch.log(1 - torch.sigmoid(row[nodeset[i]]) + 1e-6)
+        return loss / batch_size
+
+    def backward(self, dout=1):
+        batch_size = self.x.shape[0]
+        dx = torch.zeros(batch_size, self.nodeCount)
+        for i in range(batch_size):
+            row = self.x[i]
+            wordID = int((self.t[i] == 1).nonzero()) # convert one-hot to int
+            nodeset, codeset = self.id2node[wordID]
+            for i, code in enumerate(codeset):
+                if code == 0:
+                    dx[i][nodeset[i]] += torch.sigmoid(row[nodeset[i]]) - 1
+                else:
+                    dx[i][nodeset[i]] += torch.sigmoid(row[nodeset[i]])
+        return dx * dout / batch_size
