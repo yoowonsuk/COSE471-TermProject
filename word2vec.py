@@ -57,7 +57,7 @@ def word2vec_trainer(ns, corpus, word2ind, ind2node,
         lr = learning_rate*(1-i/iteration)
         optimizer.set_lr(lr)
         #########################################################
-        if i%100==0 and i != 0:
+        if i%10==0 and i != 0:
             avg_loss=sum(losses)/len(losses)
             print("Iteration : %d / Loss : %f" %(i, avg_loss))
     ##########################################################################
@@ -146,7 +146,7 @@ def main():
     for word in processed:
         id_corpus.append(word2ind[word])
     w_emb, w_out = word2vec_trainer(ns, torch.tensor(id_corpus).int(), word2ind, ind2node,
-                              mode=mode, dimension=300, learning_rate=0.025, iteration=320000)
+                              mode=mode, dimension=300, learning_rate=0.025, iteration=10000)
     torch.save([w_emb, word2ind, ind2word, w_out], '{0}{1}{2}.pt'.format(mode, ns, subsampling))
     
 main()

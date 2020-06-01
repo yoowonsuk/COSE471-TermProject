@@ -116,11 +116,9 @@ class HSLogLoss(LossLayer):
             row = self.x[i]
             wordID = int((self.t[i] == 1).nonzero()) # convert one-hot to int
             nodeset, codeset = self.id2node[wordID]
-            for i, code in enumerate(codeset):
-                if code == 0:
-                    loss += -torch.log(torch.sigmoid(row[nodeset[i]]) + 1e-6)
-                else:
-                    loss += -torch.log(1 - torch.sigmoid(row[nodeset[i]]) + 1e-6)
+            nodeset, codeset = torch.tensor(nodeset), torch.tensor(codeset)
+            loss += -torch.log(torch.sigmoid(row[nodeset[(codeset == 0).nonzero()]] + 1e-6)).sum()
+            loss += -torch.log(1 - torch.sigmoid(row[nodeset[(codeset == 1).nonzero()]] + 1e-6)).sum()
         return loss / batch_size
 
     def backward(self, dout=1):
@@ -130,9 +128,10 @@ class HSLogLoss(LossLayer):
             row = self.x[i]
             wordID = int((self.t[i] == 1).nonzero()) # convert one-hot to int
             nodeset, codeset = self.id2node[wordID]
-            for i, code in enumerate(codeset):
+            nodeset, codeset = torch.tensor(nodeset), torch.tensor(codeset)
+            for j, code in enumerate(codeset):
                 if code == 0:
-                    dx[i][nodeset[i]] += torch.sigmoid(row[nodeset[i]]) - 1
+                    dx[i][nodeset[j]] += torch.sigmoid(row[nodeset[j]]) - 1
                 else:
-                    dx[i][nodeset[i]] += torch.sigmoid(row[nodeset[i]])
+                    dx[i][nodeset[j]] += torch.sigmoid(row[nodeset[j]])
         return dx * dout / batch_size
