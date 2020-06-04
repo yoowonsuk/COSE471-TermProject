@@ -224,20 +224,19 @@ def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
                 L, G_emb, G_out = CBOW_HS(centerInd, contextInds, codes, W_emb, W_out[nodes])
                 W_emb[contextInds] -= lr * G_emb
                 W_out[nodes] -= lr * G_out
-                losses.append(L.item())
             elif ns > 0:
                 L, G_emb, G_out = CBOW_NS(centerInd, contextInds, W_emb, W_out)
                 W_emb[contextInds] -= lr * G_emb
                 W_out -= lr * G_out
-                losses.append(L.item())
             else:
                 L, G_emb, G_out = CBOW(centerInd, contextInds, W_emb, W_out)
                 W_emb[contextInds] -= lr * G_emb
                 W_out -= lr * G_out
-                losses.append(L.item())
+            losses.append(L.item())
 
 
         elif mode == "SG":
+            L = 0
             if ns == 0:
                 nodes = []
                 codes = []
@@ -246,20 +245,23 @@ def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
                     codes.append(torch.tensor(ind2node[contextInd.item()][1]))
                 # Only use the activated rows of the weight matrix
                 for index, contextInd in enumerate(contextInds):
-                    L, G_emb, G_out = Skipgram_HS(centerInd, contextInd, codes[index], W_emb, W_out[nodes[index]])
+                    L_each, G_emb, G_out = Skipgram_HS(centerInd, contextInd, codes[index], W_emb, W_out[nodes[index]])
+                    L += L_each
                     W_emb[centerInd] -= lr * G_emb.squeeze()
                     W_out[nodes[index]] -= lr * G_out
             elif ns > 0:
                 for contextInd in contextInds:
-                    L, G_emb, G_out = Skipgram_NS(centerInd, contextInd, W_emb, W_out)
+                    L_each, G_emb, G_out = Skipgram_NS(centerInd, contextInd, W_emb, W_out)
+                    L += L_each
                     W_emb[centerInd] -= lr * G_emb.squeeze()
                     W_out -= lr * G_out
             else:
                 for contextInd in contextInds:
-                    L, G_emb, G_out = Skipgram(centerInd, contextInd, W_emb, W_out)
+                    L_each, G_emb, G_out = Skipgram(centerInd, contextInd, W_emb, W_out)
+                    L += L_each
                     W_emb[centerInd] -= lr * G_emb.squeeze()
                     W_out -= lr * G_out                
-
+            L /= len(contextInds)
             losses.append(L.item())
         else:
             print("Unkwnown mode : " + mode)
