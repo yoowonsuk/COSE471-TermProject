@@ -36,6 +36,8 @@ def CBOW(center, context, inputMatrix, outputMatrix):
     # grad_emb : Gradient of word embedding (type:torch.tensor(1,D))        #
     # grad_out : Gradient of outputMatrix (type:torch.tensor(V,D))          #
     #########################################################################
+    if len(context) == 0:
+        exit(0)
     input_embed = inputMatrix[context]
     hidden = input_embed.sum(axis = 0).view(1, -1) / len(context)
     dot = torch.mm(hidden, outputMatrix.T).view(-1)
@@ -346,7 +348,7 @@ if __name__ == "__main__":
     # Training section
     start_time = time.time()
     emb, _ = word2vec_trainer(ns, processed, word2ind, freqdict, ind2node,
-                              mode=mode, subsampling=subsampling, dimension=300, learning_rate=0.025, iteration=320000)
+                              mode=mode, subsampling=subsampling, dimension=300, learning_rate=0.1, iteration=1500000)
     end_time = time.time()
     print("Training time : %f min" % ((end_time - start_time) / 60))
     if args.ns == 0:
