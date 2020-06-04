@@ -9,7 +9,7 @@ How to run
 python word2vec.py [mode] [ns] [subsampling] [partition]
 
 mode : "SG" for skipgram, "CBOW" for CBOW
-ns : "0" for hierarchical softmax, the other numbers would be the number of negative samples
+ns : "0" for hierarchical softmax, the other positive numbers would be the number of negative samples, and negative numbers would be neither
 subsampling : "Y" for using subsampling, "N" for not
 partition : "part" if you want to train on a part of corpus (fast training but worse performance), 
              "full" if you want to train on full corpus (better performance but very slow training)

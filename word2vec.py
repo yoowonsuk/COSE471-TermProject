@@ -22,6 +22,33 @@ def getRandomContext(corpus, C=5):
         return getRandomContext(corpus, C)
 
 
+def CBOW(center, context, inputMatrix, outputMatrix):
+    ################################  Input  ################################
+    # center : Index of a centerword (type:int)                             #
+    # context : Indices of contextwords (type:list(int))                    #
+    # inputMatrix : Weight matrix of input (type:torch.tensor(V,D))         #
+    # outputMatrix : Weight matrix of output (type:torch.tensor(V,D))       #
+    #########################################################################
+
+    ###############################  Output  ################################
+    # loss : Loss value (type:torch.tensor(1))                              #
+    # grad_emb : Gradient of word embedding (type:torch.tensor(1,D))        #
+    # grad_out : Gradient of outputMatrix (type:torch.tensor(V,D))          #
+    #########################################################################
+    input_embed = inputMatrix[context]
+    hidden = input_embed.sum(axis = 0).view(1, -1) / len(context)
+    dot = torch.mm(hidden, outputMatrix.T).view(-1)
+    softmax = torch.softmax(dot, dim=0)
+    loss = -torch.log(softmax[center] + 1e-04)
+    center_onehot = torch.zeros_like(dot)
+    center_onehot[center] = 1
+    dL = dot - center_onehot
+    dL = dL.view(-1, 1)
+    grad_out = torch.mm(dL, hidden)
+    dx = torch.mm(dL.T, outputMatrix) / len(context)
+    grad_emb = dx 
+    return loss, grad_emb, grad_out
+
 def CBOW_HS(center, context, codes, inputMatrix, outputMatrix):
     ################################  Input  ################################
     # center : Index of a centerword (type:int)                             #
@@ -74,6 +101,33 @@ def CBOW_NS(center, context, inputMatrix, outputMatrix):
     grad_out = None
 
     return loss, grad_emb, grad_out
+
+def Skipgram(center, context, inputMatrix, outputMatrix):
+    ################################  Input  ################################
+    # center : Index of a centerword (type:int)                             #
+    # context : Indices of contextwords (type:list(int))                    #
+    # inputMatrix : Weight matrix of input (type:torch.tensor(V,D))         #
+    # outputMatrix : Weight matrix of output (type:torch.tensor(V,D))       #
+    #########################################################################
+
+    ###############################  Output  ################################
+    # loss : Loss value (type:torch.tensor(1))                              #
+    # grad_emb : Gradient of word vector (type:torch.tensor(1,D))           #
+    # grad_out : Gradient of outputMatrix (type:torch.tensor(V,D))          #
+    #########################################################################
+    hidden = inputMatrix[center].view(1, -1)
+    dot = torch.mm(hidden, outputMatrix.T).view(-1)
+    softmax = torch.softmax(dot, dim=0)
+    loss = -torch.log(softmax[center] + 1e-04)
+    center_onehot = torch.zeros_like(dot)
+    center_onehot[center] = 1
+    dL = dot - center_onehot
+    dL = dL.view(-1, 1)
+    grad_out = torch.mm(dL, hidden)
+    dx = torch.mm(dL.T, outputMatrix)
+    grad_emb = dx 
+    return loss, grad_emb, grad_out
+
 
 def Skipgram_HS(center, context, codes, inputMatrix, outputMatrix):
     ################################  Input  ################################
@@ -157,9 +211,7 @@ def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
         # to be implemented
         centerInd = torch.tensor(word2ind[centerWord])
         contextInds = torch.tensor([word2ind[context] for context in contextWords])
-        # choose whether use learning rate decay
-        # lr = learning_rate * (1 - i / iteration)
-        lr = learning_rate
+        lr = learning_rate * (1 - i / iteration)
 
         if mode == "CBOW":
             if ns == 0:
@@ -167,11 +219,20 @@ def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
                 nodes = torch.cuda.LongTensor(ind2node[centerInd.item()][0])
                 codes = torch.cuda.LongTensor(ind2node[centerInd.item()][1])
                 L, G_emb, G_out = CBOW_HS(centerInd, contextInds, codes, W_emb, W_out[nodes])
-            else:
+                W_emb[contextInds] -= lr * G_emb
+                W_out[nodes] -= lr * G_out
+                losses.append(L.item())
+            elif ns > 0:
                 L, G_emb, G_out = CBOW_NS(centerInd, contextInds, W_emb, W_out)
-            W_emb[contextInds] -= lr * G_emb
-            W_out[nodes] -= lr * G_out
-            losses.append(L.item())
+                W_emb[contextInds] -= lr * G_emb
+                W_out -= lr * G_out
+                losses.append(L.item())
+            else:
+                L, G_emb, G_out = CBOW(centerInd, contextInds, W_emb, W_out)
+                W_emb[contextInds] -= lr * G_emb
+                W_out -= lr * G_out
+                losses.append(L.item())
+
 
         elif mode == "SG":
             if ns == 0:
@@ -185,11 +246,16 @@ def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
                     L, G_emb, G_out = Skipgram_HS(centerInd, contextInd, codes[index], W_emb, W_out[nodes[index]])
                     W_emb[centerInd] -= lr * G_emb.squeeze()
                     W_out[nodes[index]] -= lr * G_out
-            else:
+            elif ns > 0:
                 for contextInd in contextInds:
                     L, G_emb, G_out = Skipgram_NS(centerInd, contextInd, W_emb, W_out)
                     W_emb[centerInd] -= lr * G_emb.squeeze()
                     W_out -= lr * G_out
+            else:
+                for contextInd in contextInds:
+                    L, G_emb, G_out = Skipgram(centerInd, contextInd, W_emb, W_out)
+                    W_emb[centerInd] -= lr * G_emb.squeeze()
+                    W_out -= lr * G_out                
 
             losses.append(L.item())
         else:
@@ -220,7 +286,7 @@ if __name__ == "__main__":
     # Load and tokenize corpus
     print("loading...")
     if part == "part":
-        text = open('text8', mode='r').readlines()[0][:100000]  # Load a part of corpus for debugging
+        text = open('text8', mode='r').readlines()[0][:10000000]  # Load a part of corpus for debugging
     elif part == "full":
         text = open('text8', mode='r').readlines()[0]  # Load full corpus for submission
     else:
@@ -278,5 +344,11 @@ if __name__ == "__main__":
             ind2node[word2ind[word]] = (nodeset, codeset)
     # Training section
     emb, _ = word2vec_trainer(ns, processed, word2ind, freqdict, ind2node,
-                              mode=mode, subsampling=subsampling, dimension=300, learning_rate=0.1, iteration=5500000,)
-    torch.save([emb, word2ind, ind2word], 'sg.pt')
+                              mode=mode, subsampling=subsampling, dimension=300, learning_rate=0.025, iteration=320000)
+    if args.ns == 0:
+        save_ns = "hs"
+    elif args.ns > 0:
+        save_ns = "ns"
+    else:
+        save_ns = "neither"
+    torch.save([emb, word2ind, ind2word], '{0}{1}{2}.pt'.format(mode, save_ns, subsampling))
