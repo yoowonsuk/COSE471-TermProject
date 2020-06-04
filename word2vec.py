@@ -264,7 +264,7 @@ def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
             exit()
         if c % 1000 == 0:
             avg_loss = sum(losses) / len(losses)
-            print("Loss : %f" % (avg_loss,))
+            print("Iteration : %d / Loss : %f" % (c, avg_loss))
             losses = []
 
     return W_emb, W_out
