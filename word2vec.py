@@ -1,6 +1,7 @@
 import torch
 import random
 import argparse
+import time
 from random import shuffle
 from collections import Counter
 from huffman import HuffmanCoding
@@ -343,8 +344,11 @@ if __name__ == "__main__":
                 s += ch
             ind2node[word2ind[word]] = (nodeset, codeset)
     # Training section
+    start_time = time.time()
     emb, _ = word2vec_trainer(ns, processed, word2ind, freqdict, ind2node,
                               mode=mode, subsampling=subsampling, dimension=300, learning_rate=0.025, iteration=320000)
+    end_time = time.time()
+    print("Training time : %f min" % ((end_time - start_time) / 60))
     if args.ns == 0:
         save_ns = "hs"
     elif args.ns > 0:
