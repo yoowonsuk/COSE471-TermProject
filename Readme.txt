@@ -24,3 +24,7 @@ You should adjust the other hyperparameters in the code file manually.
 --------------------------------------------------------------------------------------------------
 
 report에서 hyperparameter는 논문 찾아볼것
+
+
+python word2vec.py CBOW -1 N part
+python word2vec.py SG -1 N part
