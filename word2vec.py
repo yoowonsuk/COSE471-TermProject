@@ -350,7 +350,7 @@ if __name__ == "__main__":
     # Training section
     start_time = time.time()
     emb, _ = word2vec_trainer(ns, processed, word2ind, freqdict, ind2node,
-                              mode=mode, subsampling=subsampling, dimension=300, learning_rate=0.1, iteration=100)
+                              mode=mode, subsampling=subsampling, dimension=300, learning_rate=0.025, iteration=1500000)
     end_time = time.time()
     print("Training time : %f min" % ((end_time - start_time) / 60))
     if args.ns == 0:
