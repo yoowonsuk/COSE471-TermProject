@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 import random
 import argparse
 import time
@@ -36,8 +37,6 @@ def CBOW(center, context, inputMatrix, outputMatrix):
     # grad_emb : Gradient of word embedding (type:torch.tensor(1,D))        #
     # grad_out : Gradient of outputMatrix (type:torch.tensor(V,D))          #
     #########################################################################
-    if len(context) == 0:
-        exit(0)
     input_embed = inputMatrix[context]
     hidden = input_embed.sum(axis = 0).view(1, -1) / len(context)
     dot = torch.mm(hidden, outputMatrix.T).view(-1)
@@ -87,7 +86,7 @@ def CBOW_HS(center, context, codes, inputMatrix, outputMatrix):
 
 def CBOW_NS(center, context, inputMatrix, outputMatrix):
     ################################  Input  ################################
-    # center : Index of a centerword (type:int)                             #
+    # center : Index of a centerword (type:int)                             #  
     # context : Indices of contextwords (type:list(int))                    #
     # inputMatrix : Weight matrix of input (type:torch.tensor(V,D))         #
     # outputMatrix : Weight matrix of output (type:torch.tensor(V,D))       #
@@ -98,11 +97,22 @@ def CBOW_NS(center, context, inputMatrix, outputMatrix):
     # grad_emb : Gradient of word embedding (type:torch.tensor(1,D))        #
     # grad_out : Gradient of outputMatrix (type:torch.tensor(V,D))          #
     #########################################################################
-
-    loss = None
-    grad_emb = None
-    grad_out = None
-
+    input_embed = inputMatrix[context]
+    hidden = input_embed.sum(axis = 0).view(1, -1) / len(context)
+    dot = torch.mm(hidden, outputMatrix.T).view(-1)
+    prob = torch.zeros_like(dot)
+    index_positive = 0
+    index_negative = torch.arange(1, len(dot))
+    prob[index_positive] = torch.sigmoid(dot[index_positive])
+    prob[index_negative] = 1 - torch.sigmoid(dot[index_negative])
+    loss = torch.sum(-torch.log(prob + 1e-04))
+    dL = torch.zeros_like(dot)
+    dL[index_positive] = torch.sigmoid(dot[index_positive]) - 1
+    dL[index_negative] = torch.sigmoid(dot[index_negative])
+    dL = dL.view(-1, 1)
+    grad_out = torch.mm(dL, hidden)
+    dx = torch.mm(dL.T, outputMatrix) / len(context)
+    grad_emb = dx 
     return loss, grad_emb, grad_out
 
 def Skipgram(center, context, inputMatrix, outputMatrix):
@@ -178,11 +188,21 @@ def Skipgram_NS(center, context, inputMatrix, outputMatrix):
     # grad_emb : Gradient of word vector (type:torch.tensor(1,D))           #
     # grad_out : Gradient of outputMatrix (type:torch.tensor(V,D))          #
     #########################################################################
-
-    loss = None
-    grad_emb = None
-    grad_out = None
-
+    hidden = inputMatrix[center].view(1, -1)
+    dot = torch.mm(hidden, outputMatrix.T).view(-1)
+    prob = torch.zeros_like(dot)
+    index_positive = 0
+    index_negative = torch.arange(1, len(dot))
+    prob[index_positive] = torch.sigmoid(dot[index_positive])
+    prob[index_negative] = 1 - torch.sigmoid(dot[index_negative])
+    loss = torch.sum(-torch.log(prob + 1e-04))
+    dL = torch.zeros_like(dot)
+    dL[index_positive] = torch.sigmoid(dot[index_positive]) - 1
+    dL[index_negative] = torch.sigmoid(dot[index_negative])
+    dL = dL.view(-1, 1)
+    grad_out = torch.mm(dL, hidden)
+    dx = torch.mm(dL.T, outputMatrix)
+    grad_emb = dx 
     return loss, grad_emb, grad_out
 
 
@@ -194,8 +214,12 @@ def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
     W_emb = W_emb.cuda()
     W_out = W_out.cuda()
     window_size = 5
-
+    negative_choice = 10
     losses = []
+    fw = [0] * len(freqdict)
+    sum_ = int((torch.tensor(list(freqdict.values())) ** (3/4)).sum())
+    for i, key in enumerate(freqdict):
+        fw[word2ind[key]] = (freqdict[key]) ** (3/4) / sum_
     for c in range(iteration):
         # Training word2vec using SGD
         while True:
@@ -205,8 +229,8 @@ def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
             # subsampling
             if subsampling == "Y":
                 threshold = 1e-5
-                fw = freqdict[centerWord] / sum(freqdict.values())
-                exclude_prob = 1 - math.sqrt(threshold / fw)
+                fwi = fw[word2ind[centerWord]]
+                exclude_prob = 1 - math.sqrt(threshold / fwi)
                 if random.random() < exclude_prob:
                     continue
             if len(contextWords) == window_size * 2:
@@ -214,8 +238,8 @@ def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
         # to be implemented
         centerInd = torch.tensor(word2ind[centerWord])
         contextInds = torch.tensor([word2ind[context] for context in contextWords])
+        # learning rate decay
         lr = learning_rate * (1 - i / iteration)
-
         if mode == "CBOW":
             if ns == 0:
                 # Only use the activated rows of the weight matrix
@@ -225,15 +249,18 @@ def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
                 W_emb[contextInds] -= lr * G_emb
                 W_out[nodes] -= lr * G_out
             elif ns > 0:
-                L, G_emb, G_out = CBOW_NS(centerInd, contextInds, W_emb, W_out)
+                positive = centerInd
+                negative = torch.from_numpy(np.random.choice(list(word2ind.values())[0:centerInd] + list(word2ind.values())[centerInd:], 
+                negative_choice, fw[0:centerInd] + fw[centerInd:]))
+                activated = torch.cat((positive.view(1), negative.type(torch.int64)))
+                L, G_emb, G_out = CBOW_NS(centerInd, contextInds, W_emb, W_out[activated])
                 W_emb[contextInds] -= lr * G_emb
-                W_out -= lr * G_out
+                W_out[activated] -= lr * G_out
             else:
                 L, G_emb, G_out = CBOW(centerInd, contextInds, W_emb, W_out)
                 W_emb[contextInds] -= lr * G_emb
                 W_out -= lr * G_out
             losses.append(L.item())
-
 
         elif mode == "SG":
             L = 0
@@ -251,10 +278,14 @@ def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
                     W_out[nodes[index]] -= lr * G_out
             elif ns > 0:
                 for contextInd in contextInds:
-                    L_each, G_emb, G_out = Skipgram_NS(centerInd, contextInd, W_emb, W_out)
+                    positive = contextInd
+                    negative = torch.from_numpy(np.random.choice(list(word2ind.values())[0:contextInd] + list(word2ind.values())[contextInd:], 
+                    negative_choice, fw[0:contextInd] + fw[contextInd:]))
+                    activated = torch.cat((positive.view(1), negative.type(torch.int64)))
+                    L_each, G_emb, G_out = Skipgram_NS(centerInd, contextInd, W_emb, W_out[activated])
                     L += L_each
                     W_emb[centerInd] -= lr * G_emb.squeeze()
-                    W_out -= lr * G_out
+                    W_out[activated] -= lr * G_out
             else:
                 for contextInd in contextInds:
                     L_each, G_emb, G_out = Skipgram(centerInd, contextInd, W_emb, W_out)
@@ -266,7 +297,7 @@ def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
         else:
             print("Unkwnown mode : " + mode)
             exit()
-        if c % 1000 == 0:
+        if c % 50000 == 0:
             avg_loss = sum(losses) / len(losses)
             print("Iteration : %d / Loss : %f" % (c, avg_loss))
             losses = []
@@ -350,7 +381,8 @@ if __name__ == "__main__":
     # Training section
     start_time = time.time()
     emb, _ = word2vec_trainer(ns, processed, word2ind, freqdict, ind2node,
-                              mode=mode, subsampling=subsampling, dimension=300, learning_rate=0.025, iteration=1500000)
+                              mode=mode, subsampling=subsampling, dimension=300, learning_rate=0.1, iteration=15000)
+                              
     end_time = time.time()
     print("Training time : %f min" % ((end_time - start_time) / 60))
     if args.ns == 0:
