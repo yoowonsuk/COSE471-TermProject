@@ -301,6 +301,13 @@ def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
             avg_loss = sum(losses) / len(losses)
             print("Iteration : %d / Loss : %f" % (c, avg_loss))
             losses = []
+            if ns == 0:
+                save_ns = "hs"
+            elif ns > 0:
+                save_ns = "ns"
+            else:
+                save_ns = "neither"
+            torch.save([emb, word2ind, ind2word], '{0}{1}{2}.pt'.format(mode, save_ns, subsampling))
 
     return W_emb, W_out
 
@@ -385,9 +392,9 @@ if __name__ == "__main__":
                               
     end_time = time.time()
     print("Training time : %f min" % ((end_time - start_time) / 60))
-    if args.ns == 0:
+    if ns == 0:
         save_ns = "hs"
-    elif args.ns > 0:
+    elif ns > 0:
         save_ns = "ns"
     else:
         save_ns = "neither"
