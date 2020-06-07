@@ -206,7 +206,7 @@ def Skipgram_NS(center, context, inputMatrix, outputMatrix):
     return loss, grad_emb, grad_out
 
 
-def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
+def word2vec_trainer(ns, corpus, word2ind, ind2word, freqdict, ind2node,
                      mode="CBOW", subsampling="N", dimension=64, learning_rate=0.05, iteration=50000):
     # initialization
     W_emb = torch.randn(len(word2ind), dimension) / (dimension ** 0.5)
@@ -307,7 +307,7 @@ def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
                 save_ns = "ns"
             else:
                 save_ns = "neither"
-            torch.save([emb, word2ind, ind2word], '{0}{1}{2}.pt'.format(mode, save_ns, subsampling))
+            torch.save([W_emb, word2ind, ind2word], '{0}{1}{2}.pt'.format(mode, save_ns, subsampling))
 
     return W_emb, W_out
 
@@ -387,7 +387,7 @@ if __name__ == "__main__":
             ind2node[word2ind[word]] = (nodeset, codeset)
     # Training section
     start_time = time.time()
-    emb, _ = word2vec_trainer(ns, processed, word2ind, freqdict, ind2node,
+    emb, _ = word2vec_trainer(ns, processed, word2ind, ind2word, freqdict, ind2node,
                               mode=mode, subsampling=subsampling, dimension=300, learning_rate=0.1, iteration=15000)
                               
     end_time = time.time()
