@@ -5,6 +5,7 @@ import time
 from random import shuffle
 from collections import Counter
 from huffman import HuffmanCoding
+import negative_sampling_layer
 import math
 
 def getRandomContext(corpus, C=5):
@@ -99,9 +100,18 @@ def CBOW_NS(center, context, inputMatrix, outputMatrix):
     # grad_out : Gradient of outputMatrix (type:torch.tensor(V,D))          #
     #########################################################################
 
-    loss = None
-    grad_emb = None
-    grad_out = None
+    input_embed = inputMatrix[context] # embeding
+    hidden = input_embed.sum(axis = 0).view(1, -1) / len(context) # average
+    dot = torch.mm(hidden, outputMatrix.T).view(-1) # Wout
+
+    #================================
+    loss_layer = negative_sampling_layer.NegativeSamplingLoss(outputMatrix, corpus, 0.75, 5)
+    loss = loss_layer.forward(dot, center)
+    dL = loss_layer.backward()
+    grad_out = torch.mm(dL, hidden)
+    dx = torch.mm(dL.T, outputMatrix) / len(context)
+    grad_emb = dx
+    #================================
 
     return loss, grad_emb, grad_out
 
@@ -191,8 +201,8 @@ def word2vec_trainer(ns, corpus, word2ind, freqdict, ind2node,
     # initialization
     W_emb = torch.randn(len(word2ind), dimension) / (dimension ** 0.5)
     W_out = torch.randn(len(word2ind), dimension) / (dimension ** 0.5)
-    W_emb = W_emb.cuda()
-    W_out = W_out.cuda()
+    #W_emb = W_emb.cuda()
+    #W_out = W_out.cuda()
     window_size = 5
 
     losses = []
