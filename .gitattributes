@@ -2,3 +2,5 @@ test8 filter=lfs diff=lfs merge=lfs -text
 subset1 filter=lfs diff=lfs merge=lfs -text
 subset0.1/ filter=lfs diff=lfs merge=lfs -text
 subset1with880000/ filter=lfs diff=lfs merge=lfs -text
+CBOW filter=lfs diff=lfs merge=lfs -text
+CBOWnsY.pt filter=lfs diff=lfs merge=lfs -text
