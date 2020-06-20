@@ -239,16 +239,16 @@ def word2vec_trainer(ns, corpus, word2ind, ind2word, freqdict, ind2node,
         centerInd = torch.tensor(word2ind[centerWord])
         contextInds = torch.tensor([word2ind[context] for context in contextWords])
         # learning rate decay
-        lr = learning_rate * (1 - i / iteration)
+        lr = learning_rate * (1 - c / iteration)
         if mode == "CBOW":
-            if ns == 0:
+            if ns == 0: # Hierarchical softmax
                 # Only use the activated rows of the weight matrix
                 nodes = torch.cuda.LongTensor(ind2node[centerInd.item()][0])
                 codes = torch.cuda.LongTensor(ind2node[centerInd.item()][1])
                 L, G_emb, G_out = CBOW_HS(centerInd, contextInds, codes, W_emb, W_out[nodes])
                 W_emb[contextInds] -= lr * G_emb
                 W_out[nodes] -= lr * G_out
-            elif ns > 0:
+            elif ns > 0: # Negative sampling
                 positive = centerInd
                 negative = torch.from_numpy(np.random.choice(list(word2ind.values())[0:centerInd] + list(word2ind.values())[centerInd:], 
                 negative_choice, fw[0:centerInd] + fw[centerInd:]))
@@ -256,7 +256,7 @@ def word2vec_trainer(ns, corpus, word2ind, ind2word, freqdict, ind2node,
                 L, G_emb, G_out = CBOW_NS(centerInd, contextInds, W_emb, W_out[activated])
                 W_emb[contextInds] -= lr * G_emb
                 W_out[activated] -= lr * G_out
-            else:
+            else: # Vanilla
                 L, G_emb, G_out = CBOW(centerInd, contextInds, W_emb, W_out)
                 W_emb[contextInds] -= lr * G_emb
                 W_out -= lr * G_out
@@ -264,7 +264,7 @@ def word2vec_trainer(ns, corpus, word2ind, ind2word, freqdict, ind2node,
 
         elif mode == "SG":
             L = 0
-            if ns == 0:
+            if ns == 0: # Hierarchical softmax
                 nodes = []
                 codes = []
                 for contextInd in list(contextInds):
@@ -276,7 +276,7 @@ def word2vec_trainer(ns, corpus, word2ind, ind2word, freqdict, ind2node,
                     L += L_each
                     W_emb[centerInd] -= lr * G_emb.squeeze()
                     W_out[nodes[index]] -= lr * G_out
-            elif ns > 0:
+            elif ns > 0:  # Negative sampling
                 for contextInd in contextInds:
                     positive = contextInd
                     negative = torch.from_numpy(np.random.choice(list(word2ind.values())[0:contextInd] + list(word2ind.values())[contextInd:], 
@@ -286,7 +286,7 @@ def word2vec_trainer(ns, corpus, word2ind, ind2word, freqdict, ind2node,
                     L += L_each
                     W_emb[centerInd] -= lr * G_emb.squeeze()
                     W_out[activated] -= lr * G_out
-            else:
+            else:  # Vanilla
                 for contextInd in contextInds:
                     L_each, G_emb, G_out = Skipgram(centerInd, contextInd, W_emb, W_out)
                     L += L_each
@@ -297,7 +297,7 @@ def word2vec_trainer(ns, corpus, word2ind, ind2word, freqdict, ind2node,
         else:
             print("Unkwnown mode : " + mode)
             exit()
-        if c % 50000 == 0:
+        if c % 1000 == 0:
             avg_loss = sum(losses) / len(losses)
             print("Iteration : %d / Loss : %f" % (c, avg_loss))
             losses = []
